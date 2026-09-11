@@ -8,7 +8,7 @@ import re
 # ==========================================
 # 1. Configuration & Parameters
 # ==========================================
-RESULTS_DIR = "/public2/home/zq1/大病毒NC返修/真核致病菌分析/DIAMOND_Annotation"  
+RESULTS_DIR = "DIAMOND_Annotation"  
 OUTPUT_FILE = "High_Confidence_Pathogen_Profiles.csv"
 
 # Rigorous Biological Quality Control Thresholds
