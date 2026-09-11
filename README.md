@@ -10,7 +10,8 @@ The workflow includes five major analytical modules:
 2. **Threshold screening of eukaryotic pathogen signals**
 3. **Identification of large-virus-associated markers**
 4. **Ecological driver analysis of UIP abundance**
-5. **Global visualization of UIP distribution against Anthromes background**
+5. **Gene Co-localization Null Model Analysis**
+6. **Global visualization of UIP distribution against Anthromes background**
 
 These scripts were developed for reproducible analysis of metagenomic datasets and associated environmental metadata.
 
@@ -50,3 +51,17 @@ wget https://github.com/Zhang-Qi6/Giant-viruses-accompany-eukaryotic-pathogens-e
 
 # Extract the fasta file
 unzip Combined_Competitive_DB.zip
+## Gene Co-localization Null Model Analysis
+
+To evaluate the significance of gene clustering within the metagenomic assemblies—specifically the spatial proximity of urban stressor genes, Nucleocytoviricota (NCLDV) markers, and mobile genetic elements (MGEs)—we utilize a permutation-based null model. This script (`gvmag_null_model.py`) tests whether the observed co-localization frequencies across different proximity windows indicate potential horizontal gene transfer (HGT) events rather than random gene ordering.
+
+### Features
+* **Spatial Permutation:** Shuffles gene identities within individual contigs/scaffolds while preserving the underlying spatial architecture of the genomic fragments.
+* **Sensitivity Analysis:** Simultaneously evaluates multiple proximity windows (5 kb, 10 kb, and 20 kb) to test the robustness of the physical linkage.
+* **Empirical P-value Calculation:** Compares the observed number of tripartite co-localizations (Stress + NCLDV + MGE) against a simulated background distribution.
+* **Visualization:** Automatically generates publication-ready density plots comparing observed data to the null distributions.
+
+### Usage
+
+```bash
+python gvmag_null_model.py -i <annotated_genes.tsv> -p 1000 --mobile_name "Mobile_Element"
