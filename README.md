@@ -37,3 +37,16 @@ The Python scripts require the following packages:
 
 ```bash
 pip install pandas numpy matplotlib scikit-learn pygam matplotlib-venn rasterio openpyxl
+
+## Database Download
+
+The custom competitive protein database (`Combined_Competitive_DB.faa`) required for the DIAMOND annotation step is hosted in the GitHub Releases section of this repository due to its large size.
+
+You can download and extract the database (v1.0) using the following commands before running `eukaryotic pathogen_annotation.sh`:
+
+```bash
+# Download the database archive
+wget [https://github.com/](https://github.com/)[你的用户名]/[你的仓库名]/releases/download/v1.0/Combined_Competitive_DB.zip
+
+# Extract the fasta file
+unzip Combined_Competitive_DB.zip
