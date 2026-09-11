@@ -23,6 +23,7 @@ These scripts were developed for reproducible analysis of metagenomic datasets a
 | `Threshold screening of eukaryotic pathogen.py` | Screens eukaryotic pathogen signals using predefined detection and consistency thresholds. |
 | `Large-virus association identification.sh` | Performs batch HMMER searches to identify large-virus-associated hallmark markers in predicted protein sequences. |
 | `UIP-GAM.py` | Analyzes ecological drivers of UIP abundance using variance partitioning analysis, PLS-VIP, and GAM models. |
+| `Null-Model.py` | Automatically generates publication-ready density plots comparing observed data to the null distribution. |
 | `UIP-global-map.py` | Visualizes global UIP abundance on an Anthromes raster background and exports source data for mapping. |
 
 ## Requirements
@@ -51,6 +52,7 @@ wget https://github.com/Zhang-Qi6/Giant-viruses-accompany-eukaryotic-pathogens-e
 
 # Extract the fasta file
 unzip Combined_Competitive_DB.zip
+
 ## Gene Co-localization Null Model Analysis
 
 To evaluate the significance of gene clustering within the metagenomic assemblies—specifically the spatial proximity of urban stressor genes, Nucleocytoviricota (NCLDV) markers, and mobile genetic elements (MGEs)—we utilize a permutation-based null model. This script (`gvmag_null_model.py`) tests whether the observed co-localization frequencies across different proximity windows indicate potential horizontal gene transfer (HGT) events rather than random gene ordering.
