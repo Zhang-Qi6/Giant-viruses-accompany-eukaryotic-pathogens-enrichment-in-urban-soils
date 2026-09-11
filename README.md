@@ -46,7 +46,7 @@ You can download and extract the database (v1.0) using the following commands be
 
 ```bash
 # Download the database archive
-wget [https://github.com/](https://github.com/)[你的用户名]/[你的仓库名]/releases/download/v1.0/Combined_Competitive_DB.zip
+wget https://github.com/Zhang-Qi6/Giant-viruses-accompany-eukaryotic-pathogens-enrichment-in-urban-soils/commits/v1.0
 
 # Extract the fasta file
 unzip Combined_Competitive_DB.zip
