@@ -1,8 +1,7 @@
+
 #!/usr/bin/env bash
 
-# Batch DIAMOND blastx annotation for metagenomic reads.
-# This script builds a DIAMOND database from a protein FASTA file and scans
-# R1 metagenomic reads against the database in parallel.
+# Batch DIAMOND blastx annotation for metagenomic R1 reads.
 #
 # Requirements:
 #   DIAMOND >= 2.0
@@ -20,15 +19,23 @@ usage() {
     echo "  -i   Comma-separated input directories containing FASTQ files"
     echo
     echo "Optional arguments:"
-    echo "  -p   Number of samples processed in parallel [default: 4]"
-    echo "  -t   Threads per DIAMOND job [default: 8]"
-    echo "  -e   E-value cutoff [default: 1e-5]"
+    echo "  -p   Number of samples processed in parallel [default: 8]"
+    echo "  -t   Threads per DIAMOND job [default: 30]"
+    echo "  -e   E-value cutoff [default: 1e-10]"
     echo "  -h   Show this help message"
 }
+
+# ==================================================
+# 1. Configuration
+# ==================================================
 
 CONCURRENT_JOBS=8
 THREADS_PER_JOB=30
 EVALUE="1e-10"
+
+# Added alignment quality thresholds
+MIN_IDENTITY=35
+MIN_QUERY_COVER=70
 
 while getopts ":f:d:o:i:p:t:e:h" opt; do
     case "$opt" in
@@ -65,6 +72,8 @@ export DB_PREFIX
 export OUT_DIR
 export THREADS_PER_JOB
 export EVALUE
+export MIN_IDENTITY
+export MIN_QUERY_COVER
 
 echo "Starting batch DIAMOND annotation"
 echo "Protein FASTA:      $INPUT_FAA"
@@ -73,20 +82,36 @@ echo "Output directory:   $OUT_DIR"
 echo "Parallel jobs:      $CONCURRENT_JOBS"
 echo "Threads per job:    $THREADS_PER_JOB"
 echo "E-value cutoff:     $EVALUE"
+echo "Minimum identity:   ${MIN_IDENTITY}%"
+echo "Minimum query coverage: ${MIN_QUERY_COVER}%"
+echo "Maximum target sequences: 1"
 echo
 
-# Build DIAMOND database if it does not already exist
+# ==================================================
+# 2. Build DIAMOND database if necessary
+# ==================================================
+
 if [[ ! -f "${DB_PREFIX}.dmnd" ]]; then
+
     echo "Building DIAMOND database..."
+
     diamond makedb \
         --in "$INPUT_FAA" \
         -d "$DB_PREFIX" \
         --threads "$THREADS_PER_JOB"
+
 else
+
     echo "Existing DIAMOND database detected: ${DB_PREFIX}.dmnd"
+
 fi
 
+# ==================================================
+# 3. DIAMOND blastx for individual R1 files
+# ==================================================
+
 run_diamond_single() {
+
     local read_file="$1"
     local filename
     local sample_name
@@ -95,28 +120,36 @@ run_diamond_single() {
     filename=$(basename "$read_file")
 
     case "$filename" in
+
         *.1.fastq)
             sample_name="${filename%.1.fastq}"
             ;;
+
         *_1.fastq)
             sample_name="${filename%_1.fastq}"
             ;;
+
         *_R1.fq.gz)
             sample_name="${filename%_R1.fq.gz}"
             ;;
+
         *_1.fastq.gz)
             sample_name="${filename%_1.fastq.gz}"
             ;;
+
         *)
             return 0
             ;;
+
     esac
 
     output_tsv="${OUT_DIR}/${sample_name}_diamond.tsv"
 
     if [[ -s "$output_tsv" ]]; then
+
         echo "Skipped existing result: $sample_name"
         return 0
+
     fi
 
     echo "Running DIAMOND blastx: $sample_name"
@@ -127,36 +160,57 @@ run_diamond_single() {
         -o "$output_tsv" \
         --threads "$THREADS_PER_JOB" \
         --evalue "$EVALUE" \
+        --id "$MIN_IDENTITY" \
+        --query-cover "$MIN_QUERY_COVER" \
         --max-target-seqs 1 \
         --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp \
         --quiet
+
 }
 
 export -f run_diamond_single
 
-# Convert comma-separated directories to an array
+# ==================================================
+# 4. Convert input directories to an array
+# ==================================================
+
 IFS=',' read -r -a DIR_ARRAY <<< "$INPUT_DIRS"
 
 VALID_DIRS=()
+
 for dir in "${DIR_ARRAY[@]}"; do
+
     if [[ -d "$dir" ]]; then
+
         VALID_DIRS+=("$dir")
+
     else
+
         echo "Warning: input directory not found: $dir" >&2
+
     fi
+
 done
 
 if [[ "${#VALID_DIRS[@]}" -eq 0 ]]; then
+
     echo "Error: no valid input directories found." >&2
     exit 1
+
 fi
+
+# ==================================================
+# 5. Search FASTQ files and run DIAMOND in parallel
+# ==================================================
 
 echo
 echo "Searching FASTQ files and running DIAMOND..."
+
 find -L "${VALID_DIRS[@]}" -type f | \
     grep -E '(\.1\.fastq|_1\.fastq|_R1\.fq\.gz|_1\.fastq\.gz)$' | \
     sort | \
-    xargs -r -n 1 -P "$CONCURRENT_JOBS" bash -c 'run_diamond_single "$1"' _
+    xargs -r -n 1 -P "$CONCURRENT_JOBS" \
+    bash -c 'run_diamond_single "$1"' _ {}
 
 echo
 echo "Batch DIAMOND annotation completed."
