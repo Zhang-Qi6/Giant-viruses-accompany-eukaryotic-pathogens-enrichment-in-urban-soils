@@ -28,7 +28,7 @@ usage() {
 
 CONCURRENT_JOBS=8
 THREADS_PER_JOB=30
-EVALUE="1e-5"
+EVALUE="1e-10"
 
 while getopts ":f:d:o:i:p:t:e:h" opt; do
     case "$opt" in
